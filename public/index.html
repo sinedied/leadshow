@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Leaderboard</title>
+  </head>
+  <body>
+    <!-- <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/core-js/2.1.4/core.min.js"></script>
+    <script src="http://unpkg.com/@feathersjs/client@3.7.7/dist/feathers.js"></script>
+    <script src="http://unpkg.com/socket.io-client@1.7.3/dist/socket.io.js"></script> -->
+    <script src="lib/core.min.js"></script>
+    <script src="lib/feathers.js"></script>
+    <script src="lib/socket.io.js"></script>
+    <script src="lib/countup.min.js"></script>
+    <style>
+      :root {
+        --dark-blue: #0078d7;
+        --blue   : #00A4EF;
+        --orange : #FFB900;
+        --green  : #7FBA00;
+        --yellow : #FCBC2B;
+        --red    : #F25022;
+        --grey   : #737373;
+        --dark-grey: #373C42;
+        --dark: #263740;
+        --white: #fff;
+        --headerHeight: 25vh;
+      }
+      #scores {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: var(--headerHeight);
+        font-size: 8vh;
+        color: var(--white);
+        text-align: center;
+      }
+      #scores h1 {
+        margin-top: .25em;
+        margin-bottom: 0;
+        font-size: 3em;
+        display: inline-block;
+        /* font-size: 200%; */
+      }
+      #scores h3 {
+        margin-top: 0.15em;
+        padding: 0 .5em .15em .5em;
+        color: var(--orange);
+        /* display: inline-block; */
+        background: rgba(0, 0, 0, .3);
+        border-radius: 5px;
+        font-weight: 400;
+      }
+      header {
+        position: absolute;
+        color: var(--white);
+        height: var(--headerHeight);
+        bottom: 2em;
+        left: 0;
+        right: 0;
+        margin: 0 10vw;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      header > * {
+        width: 30%;
+      }
+      .logo {
+        height: 30%;
+      }
+      .logo2 {
+        height: 100%;
+        width: auto;
+        background: var(--blue);
+        border-radius: 1em;
+        padding: 1em;
+        box-sizing: border-box;
+      }
+      .logo2 img {
+        height: 100%;
+      }
+      .title {
+        font-size: 4vh;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        font-family: 'Segoe UI', sans-serif;
+        background: url(img/change.jpg) no-repeat;
+        background-size: cover;
+        background-position: center 30%;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      @keyframes shake {
+        from,
+        to {
+          transform: scale3d(1, 1, 1);
+        }
+
+        10%,
+        30%,
+        50%,
+        70%,
+        90% {
+          transform: scale3d(1.2, 1.2, 1);
+        }
+
+        20%,
+        40%,
+        60%,
+        80% {
+          transform: scale3d(0.9, 0.9, 1);
+        }
+      }
+      .shake {
+        animation-name: shake;
+        animation-duration: 3s;
+        animation-fill-mode: both;
+        animation-iteration-count: 1;
+        animation-timing-function: ease;
+        /* animation-delay: 5s; */
+      }
+    </style>
+    <script>
+      // Socket.io is exposed as the `io` global.
+      var socket = io('/');
+      // @feathersjs/client is exposed as the `feathers` global.
+      var app = feathers();
+      var anim = null;
+
+      // Set up Socket.io client with the socket
+      app.configure(feathers.socketio(socket));
+
+      function refresh() {
+        app.service('scores')
+          .find({ playerId: 1})
+          .then(display);
+      }
+
+      function display(data) {
+        const scoresDiv = window.scores;
+        const score = data.find(p => p.playerId === 1);
+        console.log(score);
+        console.log('scores', data);
+
+        if (anim) {
+          const countup = new CountUp('amount', score.score, {
+            startVal: parseFloat(document.querySelector('#amount').textContent),
+            duration: 5,
+            useGrouping: false,
+          });
+          countup.start();
+        } else {
+          // Only first refresh
+          scoresDiv.innerHTML = `<h1 class="shake"><span id="amount">${score.score}</span> €</h1><br><h3>Currently raised</h3>`;
+       }
+
+        if (anim) {
+          clearInterval(anim);
+          anim = null;
+        }
+
+        anim = setInterval(() => {
+          const classes = document.querySelector('#scores h1').classList;
+          if (classes.contains('shake')) {
+            classes.remove('shake');
+          } else {
+            classes.add('shake');
+          }
+        }, 8000);
+
+        ring();
+      }
+
+      function ring() {
+        var audio = new Audio('./snd/bell.wav');
+        audio.play().then(null, () => console.error('If you see this error and have no audio, click on the webpage to enable audio! (chrome limitation)'));
+      }
+
+      // Receive real-time events through Socket.io
+      app.service('scores')
+        .on('created', () => refresh())
+        .on('updated', () => refresh())
+        .on('removed', () => refresh());
+
+      // Initial refresh
+      refresh();
+
+      // Create data
+      // app.service('scores').create({
+      //   playerId: 1,
+      //   name: 'raised',
+      //   score: 0
+      // });
+    </script>
+    <div id="scores"><h1 class="shake"><span id="amount">0</span> €</h1><br><h3>Currently raised</h3></div>
+    <header>
+      <img class="logo" src="img/ms-logo.svg" alt="logo">
+      <div class="logo2"><img src="img/jcn-logo.png" alt="logo"></div>
+      <div class="title">#MSLearnToGive</div>
+    </header>
+  </body>
+</html>

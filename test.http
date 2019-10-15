@@ -1,0 +1,16 @@
+// ---------------------------------------------------------------------------
+// Install REST Client extension for VS Code to use this file:
+// https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+// ---------------------------------------------------------------------------
+
+http://localhost:3030/scores
+
+###
+
+PUT http://localhost:3030/scores
+Content-Type: application/json
+
+{
+  "playerId": "Pierre",
+  "score": 4000
+}

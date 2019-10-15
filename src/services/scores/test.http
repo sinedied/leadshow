@@ -1,0 +1,7 @@
+PUT http://localhost:3030/scores
+content-type: application/json
+
+{
+  "playerId": 1,
+  "score": 560
+}
