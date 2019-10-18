@@ -1,3 +1,4 @@
-module.exports = {
+{
   "host": "leadshow.azurewebsites.net/",
-};
+  "port": "PORT"
+}
